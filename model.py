@@ -26,10 +26,10 @@ class FeedForward(nn.Module):
         self.linear_1 = nn.Linear(d_model, d_ff) # w1 and b1
         self.dropout = nn.Dropout(dropout)
         self.linear_2 = nn.Linear(d_ff, d_model) # w2 and b2
-        print(f'd_model = {d_model}, d_ff = {d_ff}')
-        print(f'self.ll_1 param cnt = {count_parameters(self.linear_1)}')
-        print(f'self.dropout param cnt = {count_parameters(self.dropout)}')
-        print(f'self.ll_2 param cnt = {count_parameters(self.linear_2)}')
+        # print(f'd_model = {d_model}, d_ff = {d_ff}')
+        # print(f'self.ll_1 param cnt = {count_parameters(self.linear_1)}')
+        # print(f'self.dropout param cnt = {count_parameters(self.dropout)}')
+        # print(f'self.ll_2 param cnt = {count_parameters(self.linear_2)}')
 
     def forward(self, x):
         # (batch, seq_len, d_model) --> (batch, seq_len, d_ff) --> (batch, seq_len, d_model)
@@ -247,11 +247,11 @@ def build_transformer(src_vocab_size: int, tgt_vocab_size: int, src_seq_len: int
     encoder_blocks = []
     for _ in range(N):
         encoder_self_attention_block = MultiheadAttention(d_model, h, dropout)
-        print(f'self_attention_block param cnt = {count_parameters(encoder_self_attention_block)}')
+        # print(f'self_attention_block param cnt = {count_parameters(encoder_self_attention_block)}')
         feed_forward_block = FeedForward(d_model, d_ff, dropout)
-        print(f'ffwd param cnt = {count_parameters(feed_forward_block)}')
+        # print(f'ffwd param cnt = {count_parameters(feed_forward_block)}')
         encoder_block = EncoderBlock(encoder_self_attention_block, feed_forward_block, dropout)
-        print(f'encoder_block param cnt = {count_parameters(encoder_block)}')
+        # print(f'encoder_block param cnt = {count_parameters(encoder_block)}')
         encoder_blocks.append(encoder_block)
 
     # Create the decoder blocks
@@ -261,7 +261,7 @@ def build_transformer(src_vocab_size: int, tgt_vocab_size: int, src_seq_len: int
         decoder_cross_attention_block = MultiheadAttention(d_model, h, dropout)
         feed_forward_block = FeedForward(d_model, d_ff, dropout)
         decoder_block = DecoderBlock(decoder_self_attention_block, decoder_cross_attention_block, feed_forward_block, dropout)
-        print(f'decoder_block param cnt = {count_parameters(decoder_block)}')
+        # print(f'decoder_block param cnt = {count_parameters(decoder_block)}')
         decoder_blocks.append(decoder_block)
     
     # Create the encoder and decoder
@@ -270,7 +270,7 @@ def build_transformer(src_vocab_size: int, tgt_vocab_size: int, src_seq_len: int
     
     # Create the projection layer
     projection_layer = ProjectionLayer(d_model, tgt_vocab_size)
-    print(f'projection_layer param cnt = {count_parameters(projection_layer)}')
+    # print(f'projection_layer param cnt = {count_parameters(projection_layer)}')
 
     # Create the transformer
     transformer = Transformer(encoder, decoder, src_embed, tgt_embed, src_pos, tgt_pos, projection_layer) 
@@ -278,8 +278,8 @@ def build_transformer(src_vocab_size: int, tgt_vocab_size: int, src_seq_len: int
     for p in transformer.parameters():
         if p.dim() > 1:
             nn.init.xavier_uniform_(p)
-    print(f'param cnt = {count_parameters(transformer)}')    
+    # print(f'param cnt = {count_parameters(transformer)}')    
     return transformer
 
-def count_parameters(model):
-  return sum(p.numel() for p in model.parameters())
+# def count_parameters(model):
+#   return sum(p.numel() for p in model.parameters())
