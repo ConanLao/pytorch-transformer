@@ -84,22 +84,22 @@ class InputEmbedding(nn.Module):
 
 
 class PositionEmbedding(nn.Module):
-    def __init__(self, max_seq_len : int, model_d : int):
+    def __init__(self, max_seq_len : int, d_model : int):
         super().__init__()
-        self.model_d = model_d
+        self.d_model = d_model
         self.max_seq_len = max_seq_len
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         
-        pe = torch.zeros([max_seq_len, model_d])
+        pe = torch.zeros([max_seq_len, d_model])
         
-        # div.shape = (model_d / 2)
-        div = torch.exp(torch.arange(0, model_d, 2, dtype=torch.float) * (math.log(10000.0) / model_d))
+        # div.shape = (d_model / 2)
+        div = torch.exp(torch.arange(0, d_model, 2, dtype=torch.float) * (-math.log(10000.0) / d_model))
         # pos.shape = (max_seq_len, 1)
         pos = torch.arange(0, self.max_seq_len, dtype=torch.float).unsqueeze(1)
-        # self.pe : (max_seq_len, model_d)
+        # self.pe : (max_seq_len, d_model)
         # Here both pos and div got broadcasted.
-        pe[:, 0::2] = torch.sin(pos / div)
-        pe[:, 1::2] = torch.cos(pos / div)
+        pe[:, 0::2] = torch.sin(pos * div)
+        pe[:, 1::2] = torch.cos(pos * div)
         # unqueeze to make batch dimension
         # TODO: Is the unsqueeze unnecessary?
         # self.pe = self.pe.unsqueeze(0).to(self.device) # (1, max_seq_len, model_d)
