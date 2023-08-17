@@ -103,7 +103,7 @@ class PositionEmbedding(nn.Module):
         # unqueeze to make batch dimension
         # TODO: Is the unsqueeze unnecessary?
         # self.pe = self.pe.unsqueeze(0).to(self.device) # (1, max_seq_len, model_d)
-        self.register_buffer('pe', pe.unsqueeze(0).to(self.device))
+        self.register_buffer('pe', pe.to(self.device))
 
     def forward(self, xb):
         return self.pe[:, :xb.shape[1], :].requires_grad_(False)
