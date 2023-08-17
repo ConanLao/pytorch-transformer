@@ -206,7 +206,7 @@ class MultiheadAttention(nn.Module):
             if mask is not None:
                 # -1e9 and -float('inf') gave the the same result
                 # logits.masked_fill(mask == 0, -float('inf'))
-                logits.masked_fill(mask == 0, -1e9)
+                logits.masked_fill_(mask == 0, -1e9)
             # # probs = F.softmax(logits, dim = -1)
             # probs = logits.softmax(dim=-1)
             # if self.dropout is not None:
