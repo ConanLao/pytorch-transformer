@@ -255,6 +255,7 @@ def train_model(config):
             # Compute the loss using a simple cross entropy
             loss = loss_fn(proj_output.view(-1, tokenizer_tgt.get_vocab_size()), label.view(-1))
             batch_iterator.set_postfix({"loss": f"{loss.item():6.3f}"})
+            batch_iterator.write(f'loss = {loss.item()}')
 
             # Log the loss
             writer.add_scalar('train loss', loss.item(), global_step)
@@ -268,6 +269,8 @@ def train_model(config):
             optimizer.zero_grad(set_to_none=True)
 
             global_step += 1
+            if global_step == 10:
+                exit(0)
 
         # Run validation at the end of every epoch
         run_validation(model, val_dataloader, tokenizer_src, tokenizer_tgt, config['seq_len'], device, lambda msg: batch_iterator.write(msg), global_step, writer)
