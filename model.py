@@ -204,6 +204,7 @@ class MultiheadAttention(nn.Module):
             # Sqrt and ** gives the same result
             # logits = q @ k.transpose(-1, -2) / math.sqrt(d_k)
             if mask is not None:
+                # -1e9 and -float('inf') gave the the same result
                 # logits.masked_fill(mask == 0, -float('inf'))
                 logits.masked_fill(mask == 0, -1e9)
             probs = F.softmax(logits, dim = -1)
@@ -219,8 +220,6 @@ class MultiheadAttention(nn.Module):
         k = self.key(k_src)
         v = self.value(v_src)
 
-        hc = self.head_cnt
-        dk = self.d_k
         # q.view(...), k.view(...), v.view(...) have shape = B, T, hc, dk
         # after transpose it becomes B, hc, T, dk
         # all q, k, v should have the same batch size B.
@@ -229,7 +228,7 @@ class MultiheadAttention(nn.Module):
         v = v.view(B, v.shape[1], self.head_cnt, self.d_k).transpose(1, 2)
 
         # B, hc, T, dk -> B, T, hc, dk -> B, T, d_model
-        a, attentions_scores = attention(q, k, v)
+        a, self.attention_scores = attention(q, k, v, mask)
         a = a.transpose(1, 2).contiguous()
         a = a.view(B, a.shape[1], self.d_model) # transpose 和reshape连在一起，a.shape[1] evalutate的顺序不对。
 
