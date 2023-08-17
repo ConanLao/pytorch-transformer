@@ -90,7 +90,7 @@ class PositionEmbedding(nn.Module):
         self.max_seq_len = max_seq_len
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         
-        self.pe = torch.zeros([max_seq_len, model_d])
+        pe = torch.zeros([max_seq_len, model_d])
         
         # div.shape = (model_d / 2)
         div = torch.exp(torch.arange(0, model_d, 2, dtype=torch.float) * (math.log(10000.0) / model_d))
@@ -98,11 +98,12 @@ class PositionEmbedding(nn.Module):
         pos = torch.arange(0, self.max_seq_len, dtype=torch.float).unsqueeze(1)
         # self.pe : (max_seq_len, model_d)
         # Here both pos and div got broadcasted.
-        self.pe[:, 0::2] = torch.sin(pos / div)
-        self.pe[:, 1::2] = torch.cos(pos / div)
+        pe[:, 0::2] = torch.sin(pos / div)
+        pe[:, 1::2] = torch.cos(pos / div)
         # unqueeze to make batch dimension
         # TODO: Is the unsqueeze unnecessary?
-        self.pe = self.pe.unsqueeze(0).to(self.device) # (1, max_seq_len, model_d)
+        # self.pe = self.pe.unsqueeze(0).to(self.device) # (1, max_seq_len, model_d)
+        self.register_buffer('pe', pe.unsqueeze(0).to(self.device))
 
     def forward(self, xb):
         return self.pe[:, :xb.shape[1], :].requires_grad_(False)
