@@ -35,18 +35,28 @@ class FeedForward(nn.Module):
         # (batch, seq_len, d_model) --> (batch, seq_len, d_ff) --> (batch, seq_len, d_model)
         return self.linear_2(self.dropout(torch.relu(self.linear_1(x))))
 
+# class InputEmbedding(nn.Module):
+
+#     def __init__(self, d_model: int, vocab_size: int) -> None:
+#         super().__init__()
+#         self.d_model = d_model
+#         self.vocab_size = vocab_size
+#         self.embedding = nn.Embedding(vocab_size, d_model)
+
+#     def forward(self, x):
+#         # (batch, seq_len) --> (batch, seq_len, d_model)
+#         # Multiply by sqrt(d_model) to scale the embeddings according to the paper
+#         return self.embedding(x) * math.sqrt(self.d_model)
+
 class InputEmbedding(nn.Module):
-
-    def __init__(self, d_model: int, vocab_size: int) -> None:
+    def __init__(self, vocab_size : int, model_d : int):
         super().__init__()
-        self.d_model = d_model
+        self.model_d = model_d
         self.vocab_size = vocab_size
-        self.embedding = nn.Embedding(vocab_size, d_model)
+        self.embedding = nn.Embedding(vocab_size, model_d)
 
-    def forward(self, x):
-        # (batch, seq_len) --> (batch, seq_len, d_model)
-        # Multiply by sqrt(d_model) to scale the embeddings according to the paper
-        return self.embedding(x) * math.sqrt(self.d_model)
+    def forward(self, xb : torch.Tensor):
+        return self.embedding(xb) * (self.model_d ** 0.5)
     
 class PositionEmbedding(nn.Module):
 
