@@ -58,29 +58,55 @@ class InputEmbedding(nn.Module):
     def forward(self, xb : torch.Tensor):
         return self.embedding(xb) * (self.model_d ** 0.5)
     
+# class PositionEmbedding(nn.Module):
+
+#     def __init__(self, d_model: int, seq_len: int) -> None:
+#         super().__init__()
+#         self.d_model = d_model
+#         self.seq_len = seq_len
+#         # Create a matrix of shape (seq_len, d_model)
+#         pe = torch.zeros(seq_len, d_model)
+#         # Create a vector of shape (seq_len)
+#         position = torch.arange(0, seq_len, dtype=torch.float).unsqueeze(1) # (seq_len, 1)
+#         # Create a vector of shape (d_model)
+#         div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model)) # (d_model / 2)
+#         # Apply sine to even indices
+#         pe[:, 0::2] = torch.sin(position * div_term) # sin(position * (10000 ** (2i / d_model))
+#         # Apply cosine to odd indices
+#         pe[:, 1::2] = torch.cos(position * div_term) # cos(position * (10000 ** (2i / d_model))
+#         # Add a batch dimension to the positional encoding
+#         pe = pe.unsqueeze(0) # (1, seq_len, d_model)
+#         # Register the positional encoding as a buffer
+#         self.register_buffer('pe', pe)
+
+#     def forward(self, x):
+#         return (self.pe[:, :x.shape[1], :]).requires_grad_(False) # (batch, seq_len, d_model)
+
+
 class PositionEmbedding(nn.Module):
-
-    def __init__(self, d_model: int, seq_len: int) -> None:
+    def __init__(self, max_seq_len : int, model_d : int):
         super().__init__()
-        self.d_model = d_model
-        self.seq_len = seq_len
-        # Create a matrix of shape (seq_len, d_model)
-        pe = torch.zeros(seq_len, d_model)
-        # Create a vector of shape (seq_len)
-        position = torch.arange(0, seq_len, dtype=torch.float).unsqueeze(1) # (seq_len, 1)
-        # Create a vector of shape (d_model)
-        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model)) # (d_model / 2)
-        # Apply sine to even indices
-        pe[:, 0::2] = torch.sin(position * div_term) # sin(position * (10000 ** (2i / d_model))
-        # Apply cosine to odd indices
-        pe[:, 1::2] = torch.cos(position * div_term) # cos(position * (10000 ** (2i / d_model))
-        # Add a batch dimension to the positional encoding
-        pe = pe.unsqueeze(0) # (1, seq_len, d_model)
-        # Register the positional encoding as a buffer
-        self.register_buffer('pe', pe)
+        self.model_d = model_d
+        self.max_seq_len = max_seq_len
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        
+        self.pe = torch.zeros([max_seq_len, model_d])
+        
+        # div.shape = (model_d / 2)
+        div = torch.exp(torch.arange(0, model_d, 2, dtype=torch.float) * (math.log(10000.0) / model_d))
+        # pos.shape = (max_seq_len, 1)
+        pos = torch.arange(0, self.max_seq_len, dtype=torch.float).unsqueeze(1)
+        # self.pe : (max_seq_len, model_d)
+        # Here both pos and div got broadcasted.
+        self.pe[:, 0::2] = torch.sin(pos / div)
+        self.pe[:, 1::2] = torch.cos(pos / div)
+        # unqueeze to make batch dimension
+        # TODO: Is the unsqueeze unnecessary?
+        self.pe = self.pe.unsqueeze(0).to(self.device) # (1, max_seq_len, model_d)
 
-    def forward(self, x):
-        return (self.pe[:, :x.shape[1], :]).requires_grad_(False) # (batch, seq_len, d_model)
+    def forward(self, xb):
+        return self.pe[:, :xb.shape[1], :].requires_grad_(False)
+
 
 class Residual(nn.Module):
     
@@ -240,8 +266,8 @@ def build_transformer(src_vocab_size: int, tgt_vocab_size: int, src_seq_len: int
     tgt_embed = InputEmbedding(tgt_vocab_size, d_model)
 
     # Create the positional encoding layers
-    src_pos = PositionEmbedding(d_model, src_seq_len)
-    tgt_pos = PositionEmbedding(d_model, tgt_seq_len)
+    src_pos = PositionEmbedding(src_seq_len, d_model)
+    tgt_pos = PositionEmbedding(tgt_seq_len, d_model)
     
     # Create the encoder blocks
     encoder_blocks = []
