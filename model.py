@@ -199,11 +199,13 @@ class MultiheadAttention(nn.Module):
     
     def forward(self, q_src, k_src, v_src : torch.Tensor, mask : torch.Tensor):
         def attention(q, k, v):
+            print('Attention!')
             d_k = q.shape[-1]
             logits = q @ k.transpose(-1, -2) / (d_k ** 0.5)
             # Sqrt and ** gives the same result
             # logits = q @ k.transpose(-1, -2) / math.sqrt(d_k)
             if mask is not None:
+                print('mask is not None!')
                 # -1e9 and -float('inf') gave the the same result
                 # logits.masked_fill(mask == 0, -float('inf'))
                 logits.masked_fill(mask == 0, -1e9)
@@ -228,7 +230,7 @@ class MultiheadAttention(nn.Module):
         v = v.view(B, v.shape[1], self.head_cnt, self.d_k).transpose(1, 2)
 
         # B, hc, T, dk -> B, T, hc, dk -> B, T, d_model
-        a, self.attention_scores = attention(q, k, v, mask)
+        a, self.attention_scores = attention(q, k, v)
         a = a.transpose(1, 2).contiguous()
         a = a.view(B, a.shape[1], self.d_model) # transpose 和reshape连在一起，a.shape[1] evalutate的顺序不对。
 
