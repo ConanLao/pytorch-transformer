@@ -1,8 +1,9 @@
+import datasets
 from model import build_transformer
 from dataset import BilingualDataset, causal_mask
 from config import get_config
 
-import torchtext.datasets as datasets
+# import torchtext.datasets as datasets
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader, random_split
@@ -24,8 +25,8 @@ import torchmetrics
 from torch.utils.tensorboard import SummaryWriter
 
 def greedy_decode(model, source, source_mask, tokenizer_src, tokenizer_tgt, max_len, device):
-    sos_idx = tokenizer_tgt.token_to_id('[SOS]')
-    eos_idx = tokenizer_tgt.token_to_id('[EOS]')
+    sos_idx = tokenizer_tgt.token_to_id('<SOS>')
+    eos_idx = tokenizer_tgt.token_to_id('<EOS>')
 
     # Precompute the encoder output and reuse it for every step
     encoder_output = model.encode(source, source_mask)
@@ -126,9 +127,9 @@ def get_or_build_tokenizer(config, ds, lang):
     tokenizer_path = Path(config['tokenizer_file'].format(lang))
     if not Path.exists(tokenizer_path):
         # Most code taken from: https://huggingface.co/docs/tokenizers/quicktour
-        tokenizer = Tokenizer(WordLevel(unk_token="[UNK]"))
+        tokenizer = Tokenizer(WordLevel(unk_token="<UNK>"))
         tokenizer.pre_tokenizer = Whitespace()
-        trainer = WordLevelTrainer(special_tokens=["[UNK]", "[PAD]", "[SOS]", "[EOS]"], min_frequency=2)
+        trainer = WordLevelTrainer(special_tokens=["<UNK>", "<PAD>", "<SOS>", "<EOS>"], min_frequency=2)
         tokenizer.train_from_iterator(get_all_sentences(ds, lang), trainer=trainer)
         tokenizer.save(str(tokenizer_path))
     else:
@@ -170,6 +171,46 @@ def get_ds(config):
 
     return train_dataloader, val_dataloader, tokenizer_src, tokenizer_tgt
 
+# def get_ds(config):
+#     data = datasets.Dataset.from_file("en-it.hf/data-00000-of-00001.arrow")
+#     # print(data.head(10))
+#     print(data.to_pandas().head(10))
+#     print(type(data))
+#     print(type(data['translation']))
+#     print(type(data['translation'][0]))
+
+#     tokenizer_src = get_or_build_tokenizer(config, data, config['lang_src'])
+#     tokenizer_tgt = get_or_build_tokenizer(config, data, config['lang_tgt'])
+
+#     # idx = 0
+#     # for i in get_all_sentences(data, 'en'):
+#     #     print(i)
+#     #     idx += 1
+#     #     if idx > 10:
+#     #         break
+
+#     train_data_size = int(0.9 * len(data))
+#     val_data_size = len(data) - train_data_size
+#     train_data, val_data = random_split(data, [train_data_size, val_data_size])
+#     # print(train_data.head(10))
+
+#     train_ds = BilingualDataset(train_data, tokenizer_src, tokenizer_tgt, config['lang_src'], config['lang_tgt'], config['seq_len'])
+#     val_ds = BilingualDataset(val_data, tokenizer_src, tokenizer_tgt, config['lang_src'], config['lang_tgt'], config['seq_len'])
+
+#     max_len_src = 0
+#     max_len_tgt = 0
+#     for e in data:
+#         max_len_src = max(max_len_src, len(tokenizer_src.encode(e['translation'][config['lang_src']]).ids))
+#         max_len_tgt = max(max_len_tgt, len(tokenizer_tgt.encode(e['translation'][config['lang_tgt']]).ids))
+
+#     print(f'max_len_src = {max_len_src}')
+#     print(f'max_len_tgt = {max_len_tgt}')
+
+#     train_dataloader = DataLoader(train_ds, batch_size=config['batch_size'], shuffle=True)
+#     val_dataloader = DataLoader(val_ds, batch_size=1, shuffle=True)
+
+#     return train_dataloader, val_dataloader, tokenizer_src, tokenizer_tgt
+
 def get_model(config, vocab_src_len, vocab_tgt_len):
     model = build_transformer(vocab_src_len, vocab_tgt_len, config["seq_len"], config['seq_len'], d_model=config['d_model'])
     return model
@@ -189,7 +230,8 @@ def train_model(config):
 
     # Optimizer with its LR scheduler
     optimizer = torch.optim.Adam(model.parameters(), lr=config['lr'], eps=1e-9)
-    loss_fn = nn.CrossEntropyLoss(ignore_index=tokenizer_src.token_to_id('[PAD]'), label_smoothing=0.1).to(device)
+    print(f"tokenizer_src.token_to_id('<PAD>') = {tokenizer_src.token_to_id('<PAD>')}")
+    loss_fn = nn.CrossEntropyLoss(ignore_index=tokenizer_src.token_to_id('<PAD>'), label_smoothing=0.1).to(device)
 
     global_step = 0
     for epoch in range(config['num_epochs']):
@@ -240,6 +282,7 @@ def train_model(config):
 
 
 if __name__ == '__main__':
+    torch.manual_seed(1337)
     warnings.filterwarnings("ignore")
     config = get_config()
     train_model(config)
