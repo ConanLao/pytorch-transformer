@@ -203,10 +203,10 @@ class MultiheadAttention(nn.Module):
             # logits = q @ k.transpose(-1, -2) / (d_k ** 0.5)
             # Sqrt and ** gives the same result
             logits = (q @ k.transpose(-1, -2)) / math.sqrt(d_k)
-            # if mask is not None:
-            #     # -1e9 and -float('inf') gave the the same result
-            #     # logits.masked_fill(mask == 0, -float('inf'))
-            #     logits.masked_fill(mask == 0, -1e9)
+            if mask is not None:
+                # -1e9 and -float('inf') gave the the same result
+                # logits.masked_fill(mask == 0, -float('inf'))
+                logits.masked_fill(mask == 0, -1e9)
             # # probs = F.softmax(logits, dim = -1)
             # probs = logits.softmax(dim=-1)
             # if self.dropout is not None:
@@ -217,9 +217,9 @@ class MultiheadAttention(nn.Module):
             # Just apply the formula from the paper
             # (batch, h, seq_len, d_k) --> (batch, h, seq_len, seq_len)
             # attention_scores = (q @ k.transpose(-2, -1)) / math.sqrt(d_k)
-            if mask is not None:
-                # Write a very low value (indicating -inf) to the positions where mask == 0
-                logits.masked_fill_(mask == 0, -1e9)
+            # if mask is not None:
+            #     # Write a very low value (indicating -inf) to the positions where mask == 0
+            #     logits.masked_fill_(mask == 0, -1e9)
             attention_scores = logits.softmax(dim=-1) # (batch, h, seq_len, seq_len) # Apply softmax
             if self.dropout is not None:
                 attention_scores = self.dropout(attention_scores)
