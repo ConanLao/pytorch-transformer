@@ -207,11 +207,11 @@ class MultiheadAttention(nn.Module):
                 # -1e9 and -float('inf') gave the the same result
                 # logits.masked_fill(mask == 0, -float('inf'))
                 logits.masked_fill_(mask == 0, -1e9)
-            # # probs = F.softmax(logits, dim = -1)
-            # probs = logits.softmax(dim=-1)
-            # if self.dropout is not None:
-            #     probs = self.dropout(probs)
-            # return (probs @ v), probs
+            # probs = F.softmax(logits, dim = -1)
+            probs = logits.softmax(dim=-1)
+            if self.dropout is not None:
+                probs = self.dropout(probs)
+            return (probs @ v), probs
         # def attention(q, k, v):
         #     d_k = q.shape[-1]
             # Just apply the formula from the paper
