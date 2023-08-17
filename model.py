@@ -129,58 +129,108 @@ class Residual(nn.Module):
     def forward(self, xb : torch.Tensor, sub_layer : nn.Module):
         return xb + self.dropout(sub_layer(self.ln(xb)))
 
-class MultiheadAttention(nn.Module):
+# class MultiheadAttention(nn.Module):
 
-    def __init__(self, d_model: int, h: int, dropout: float) -> None:
-        super().__init__()
-        self.d_model = d_model # Embedding vector size
-        self.h = h # Number of heads
-        # Make sure d_model is divisible by h
-        assert d_model % h == 0, "d_model is not divisible by h"
+#     def __init__(self, d_model: int, h: int, dropout: float) -> None:
+#         super().__init__()
+#         self.d_model = d_model # Embedding vector size
+#         self.h = h # Number of heads
+#         # Make sure d_model is divisible by h
+#         assert d_model % h == 0, "d_model is not divisible by h"
 
-        self.d_k = d_model // h # Dimension of vector seen by each head
-        self.w_q = nn.Linear(d_model, d_model) # Wq
-        self.w_k = nn.Linear(d_model, d_model) # Wk
-        self.w_v = nn.Linear(d_model, d_model) # Wv
-        self.w_o = nn.Linear(d_model, d_model) # Wo
-        self.dropout = nn.Dropout(dropout)
+#         self.d_k = d_model // h # Dimension of vector seen by each head
+#         self.w_q = nn.Linear(d_model, d_model) # Wq
+#         self.w_k = nn.Linear(d_model, d_model) # Wk
+#         self.w_v = nn.Linear(d_model, d_model) # Wv
+#         self.w_o = nn.Linear(d_model, d_model) # Wo
+#         self.dropout = nn.Dropout(dropout)
 
-    @staticmethod
-    def attention(query, key, value, mask, dropout: nn.Dropout):
-        d_k = query.shape[-1]
-        # Just apply the formula from the paper
-        # (batch, h, seq_len, d_k) --> (batch, h, seq_len, seq_len)
-        attention_scores = (query @ key.transpose(-2, -1)) / math.sqrt(d_k)
-        if mask is not None:
-            # Write a very low value (indicating -inf) to the positions where mask == 0
-            attention_scores.masked_fill_(mask == 0, -1e9)
-        attention_scores = attention_scores.softmax(dim=-1) # (batch, h, seq_len, seq_len) # Apply softmax
-        if dropout is not None:
-            attention_scores = dropout(attention_scores)
-        # (batch, h, seq_len, seq_len) --> (batch, h, seq_len, d_k)
-        # return attention scores which can be used for visualization
-        return (attention_scores @ value), attention_scores
+#     @staticmethod
+#     def attention(query, key, value, mask, dropout: nn.Dropout):
+#         d_k = query.shape[-1]
+#         # Just apply the formula from the paper
+#         # (batch, h, seq_len, d_k) --> (batch, h, seq_len, seq_len)
+#         attention_scores = (query @ key.transpose(-2, -1)) / math.sqrt(d_k)
+#         if mask is not None:
+#             # Write a very low value (indicating -inf) to the positions where mask == 0
+#             attention_scores.masked_fill_(mask == 0, -1e9)
+#         attention_scores = attention_scores.softmax(dim=-1) # (batch, h, seq_len, seq_len) # Apply softmax
+#         if dropout is not None:
+#             attention_scores = dropout(attention_scores)
+#         # (batch, h, seq_len, seq_len) --> (batch, h, seq_len, d_k)
+#         # return attention scores which can be used for visualization
+#         return (attention_scores @ value), attention_scores
 
-    def forward(self, q, k, v, mask):
-        query = self.w_q(q) # (batch, seq_len, d_model) --> (batch, seq_len, d_model)
-        key = self.w_k(k) # (batch, seq_len, d_model) --> (batch, seq_len, d_model)
-        value = self.w_v(v) # (batch, seq_len, d_model) --> (batch, seq_len, d_model)
+#     def forward(self, q, k, v, mask):
+#         query = self.w_q(q) # (batch, seq_len, d_model) --> (batch, seq_len, d_model)
+#         key = self.w_k(k) # (batch, seq_len, d_model) --> (batch, seq_len, d_model)
+#         value = self.w_v(v) # (batch, seq_len, d_model) --> (batch, seq_len, d_model)
 
-        # (batch, seq_len, d_model) --> (batch, seq_len, h, d_k) --> (batch, h, seq_len, d_k)
-        query = query.view(query.shape[0], query.shape[1], self.h, self.d_k).transpose(1, 2)
-        key = key.view(key.shape[0], key.shape[1], self.h, self.d_k).transpose(1, 2)
-        value = value.view(value.shape[0], value.shape[1], self.h, self.d_k).transpose(1, 2)
+#         # (batch, seq_len, d_model) --> (batch, seq_len, h, d_k) --> (batch, h, seq_len, d_k)
+#         query = query.view(query.shape[0], query.shape[1], self.h, self.d_k).transpose(1, 2)
+#         key = key.view(key.shape[0], key.shape[1], self.h, self.d_k).transpose(1, 2)
+#         value = value.view(value.shape[0], value.shape[1], self.h, self.d_k).transpose(1, 2)
 
-        # Calculate attention
-        x, self.attention_scores = MultiheadAttention.attention(query, key, value, mask, self.dropout)
+#         # Calculate attention
+#         x, self.attention_scores = MultiheadAttention.attention(query, key, value, mask, self.dropout)
         
-        # Combine all the heads together
-        # (batch, h, seq_len, d_k) --> (batch, seq_len, h, d_k) --> (batch, seq_len, d_model)
-        x = x.transpose(1, 2).contiguous().view(x.shape[0], -1, self.h * self.d_k)
+#         # Combine all the heads together
+#         # (batch, h, seq_len, d_k) --> (batch, seq_len, h, d_k) --> (batch, seq_len, d_model)
+#         x = x.transpose(1, 2).contiguous().view(x.shape[0], -1, self.h * self.d_k)
 
-        # Multiply by Wo
-        # (batch, seq_len, d_model) --> (batch, seq_len, d_model)  
-        return self.w_o(x)
+#         # Multiply by Wo
+#         # (batch, seq_len, d_model) --> (batch, seq_len, d_model)  
+#         return self.w_o(x)
+
+
+class MultiheadAttention(nn.Module):
+    def __init__(self, d_model : int, head_cnt : int, dropout : float):
+        super().__init__()
+        self.head_cnt = head_cnt
+        self.d_model = d_model
+        assert d_model % head_cnt == 0
+        self.d_k = d_model // head_cnt
+        self.query = nn.Linear(d_model, d_model)
+        self.key = nn.Linear(d_model, d_model)
+        self.value = nn.Linear(d_model, d_model)
+        self.output = nn.Linear(d_model, d_model)
+        self.dropout = nn.Dropout(dropout)
+    
+    def forward(self, q_src, k_src, v_src : torch.Tensor, mask : torch.Tensor):
+        def attention(q, k, v):
+            d_k = q.shape[-1]
+            logits = q @ k.transpose(-1, -2) / (d_k ** 0.5)
+            if mask is not None:
+                logits.masked_fill(mask == 0, -float('inf'))
+            probs = F.softmax(logits, dim = -1)
+            if self.dropout is not None:
+                probs = self.dropout(probs)
+            
+            return (probs @ v, probs)
+
+        B = q_src.shape[0] # Batch size is always the same for different tensors.
+        # all q,k,v have shape = B, T, d_model
+        # T may be different among q, k, v.
+        q = self.query(q_src)
+        k = self.key(k_src)
+        v = self.value(v_src)
+
+        hc = self.head_cnt
+        dk = self.d_k
+        # q.view(...), k.view(...), v.view(...) have shape = B, T, hc, dk
+        # after transpose it becomes B, hc, T, dk
+        # all q, k, v should have the same batch size B.
+        q = q.view(B, q.shape[1], self.head_cnt, self.d_k).transpose(1, 2)
+        k = k.view(B, k.shape[1], self.head_cnt, self.d_k).transpose(1, 2)
+        v = v.view(B, v.shape[1], self.head_cnt, self.d_k).transpose(1, 2)
+
+        # B, hc, T, dk -> B, T, hc, dk -> B, T, d_model
+        a, attentions_scores = attention(q, k, v)
+        a = a.transpose(1, 2).contiguous()
+        a = a.view(B, a.shape[1], self.d_model) # transpose 和reshape连在一起，a.shape[1] evalutate的顺序不对。
+
+        return self.output(a)
+
 
 class EncoderBlock(nn.Module):
 
