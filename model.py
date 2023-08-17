@@ -212,7 +212,7 @@ class MultiheadAttention(nn.Module):
             if self.dropout is not None:
                 probs = self.dropout(probs)
             
-            return (probs @ v, probs)
+            return (probs @ v), probs
         # def attention(query, key, value):
         #     d_k = query.shape[-1]
         #     # Just apply the formula from the paper
