@@ -106,7 +106,7 @@ class PositionEmbedding(nn.Module):
         self.register_buffer('pe', pe.to(self.device))
 
     def forward(self, xb):
-        return self.pe[:, :xb.shape[1], :].requires_grad_(False)
+        return self.pe[:xb.shape[1], :].requires_grad_(False)
 
 
 class Residual(nn.Module):
