@@ -200,7 +200,8 @@ class MultiheadAttention(nn.Module):
     def forward(self, q_src, k_src, v_src : torch.Tensor, mask : torch.Tensor):
         def attention(q, k, v):
             d_k = q.shape[-1]
-            logits = q @ k.transpose(-1, -2) / (d_k ** 0.5)
+            # logits = q @ k.transpose(-1, -2) / (d_k ** 0.5)
+            logits = q @ k.transpose(-1, -2) / math.sqrt(d_k)
             if mask is not None:
                 logits.masked_fill(mask == 0, -float('inf'))
             probs = F.softmax(logits, dim = -1)
