@@ -101,7 +101,8 @@ class PositionEmbedding(nn.Module):
         pe[:, 0::2] = torch.sin(pos * div)
         pe[:, 1::2] = torch.cos(pos * div)
         # unqueeze to make batch dimension
-        # TODO: Is the unsqueeze unnecessary?
+        # RESOLVED: Is the unsqueeze unnecessary?
+        # It's not!
         # self.pe = self.pe.unsqueeze(0).to(self.device) # (1, max_seq_len, model_d)
         self.register_buffer('pe', pe.to(self.device))
 
@@ -109,15 +110,24 @@ class PositionEmbedding(nn.Module):
         return self.pe[:xb.shape[1], :].requires_grad_(False)
 
 
+# class Residual(nn.Module):
+    
+#         def __init__(self, dropout: float) -> None:
+#             super().__init__()
+#             self.dropout = nn.Dropout(dropout)
+#             self.norm = LayerNormalization()
+    
+#         def forward(self, x, sublayer):
+#             return x + self.dropout(sublayer(self.norm(x)))
+
 class Residual(nn.Module):
-    
-        def __init__(self, dropout: float) -> None:
-            super().__init__()
-            self.dropout = nn.Dropout(dropout)
-            self.norm = LayerNormalization()
-    
-        def forward(self, x, sublayer):
-            return x + self.dropout(sublayer(self.norm(x)))
+    def __init__(self, dropout : float):
+        super().__init__()
+        self.dropout = nn.Dropout(dropout)
+        self.ln = LayerNormalization()
+
+    def forward(self, xb : torch.Tensor, sub_layer : nn.Module):
+        return xb + self.dropout(sub_layer(self.ln(xb)))
 
 class MultiheadAttention(nn.Module):
 
