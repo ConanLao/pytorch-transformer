@@ -208,12 +208,12 @@ class Transformer(nn.Module):
         # ERROR 3:
         # The order of class members is the order of initiation,
         # when we call nn.init.xavier_uniform_
-        self.encoder = encoder
-        self.decoder = decoder
         self.src_embed = src_embed
         self.tgt_embed = tgt_embed
         self.src_pos = src_pos
         self.tgt_pos = tgt_pos
+        self.encoder = encoder
+        self.decoder = decoder
         self.projection_layer = projection_layer
         self.dropout = nn.Dropout(dropout)
 
