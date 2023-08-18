@@ -383,9 +383,9 @@ class Transformer(nn.Module):
         tgt = self.dropout(self.tgt_embed(tgt) + self.tgt_pos(tgt))
         return self.decoder(tgt, encoder_output, src_mask, tgt_mask)
     
-    def project(self, x):
-        # (batch, seq_len, vocab_size)
-        return self.projection_layer(x)
+    # def project(self, x):
+    #     # (batch, seq_len, vocab_size)
+    #     return self.projection_layer(x)
 
 # class Transformer(nn.Module):
 #     def __init__(self, src_embed: InputEmbedding, tgt_embed : InputEmbedding, src_pos: PositionEmbedding, tgt_pos: PositionEmbedding, encoder : Encoder, decoder : Decoder, projection_layer : ProjectionLayer, dropout=0.1):
@@ -407,8 +407,8 @@ class Transformer(nn.Module):
 #         embeds = self.dropout(self.tgt_embed(xb) + self.tgt_pos(xb))
 #         return self.decoder(embeds, encoder_output, src_mask, tgt_mask)
     
-#     def project(self, xb):
-#         return self.projection_layer(xb)
+    def project(self, xb):
+        return self.projection_layer(xb)
     
 def build_transformer(src_vocab_size: int, tgt_vocab_size: int, src_seq_len: int, tgt_seq_len: int, d_model: int=512, N: int=6, h: int=8, dropout: float=0.1, d_ff: int=2048) -> Transformer:
     # Create the embedding layers
