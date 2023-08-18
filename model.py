@@ -378,7 +378,7 @@ class ProjectionLayer(nn.Module):
 #         src = self.dropout(self.src_embed(src) + self.src_pos(src))
 #         return self.encoder(src, src_mask)
     
-#     def decode(self, encoder_output: torch.Tensor, src_mask: torch.Tensor, tgt: torch.Tensor, tgt_mask: torch.Tensor):
+#     def decode(self, encoder_output: torch.Tensor, tgt: torch.Tensor, src_mask: torch.Tensor, tgt_mask: torch.Tensor):
 #         # (batch, seq_len, d_model)
 #         tgt = self.dropout(self.tgt_embed(tgt) + self.tgt_pos(tgt))
 #         return self.decoder(tgt, encoder_output, src_mask, tgt_mask)
@@ -406,7 +406,7 @@ class Transformer(nn.Module):
         embeds = self.dropout(self.src_embed(xb) + self.src_pos(xb))
         return self.encoder(embeds, src_mask)
     
-    def decode(self, xb, encoder_output, src_mask, tgt_mask):
+    def decode(self, encoder_output, xb, src_mask, tgt_mask):
         embeds = self.dropout(self.tgt_embed(xb) + self.tgt_pos(xb))
         return self.decoder(embeds, encoder_output, src_mask, tgt_mask)
     
