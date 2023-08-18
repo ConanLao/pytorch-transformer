@@ -269,8 +269,8 @@ def train_model(config):
             optimizer.zero_grad(set_to_none=True)
 
             global_step += 1
-            if global_step == 10:
-                exit(0)
+            # if global_step == 10:
+            #     exit(0)
 
         # Run validation at the end of every epoch
         run_validation(model, val_dataloader, tokenizer_src, tokenizer_tgt, config['seq_len'], device, lambda msg: batch_iterator.write(msg), global_step, writer)
