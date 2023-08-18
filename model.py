@@ -373,10 +373,10 @@ class Transformer(nn.Module):
         self.projection_layer = projection_layer
         self.dropout = nn.Dropout(dropout)
 
-    def encode(self, src, src_mask):
-        # (batch, seq_len, d_model)
-        src = self.dropout(self.src_embed(src) + self.src_pos(src))
-        return self.encoder(src, src_mask)
+    # def encode(self, src, src_mask):
+    #     # (batch, seq_len, d_model)
+    #     src = self.dropout(self.src_embed(src) + self.src_pos(src))
+    #     return self.encoder(src, src_mask)
     
     # def decode(self, encoder_output: torch.Tensor, tgt: torch.Tensor, src_mask: torch.Tensor, tgt_mask: torch.Tensor):
     #     # (batch, seq_len, d_model)
@@ -399,9 +399,9 @@ class Transformer(nn.Module):
 #         self.projection_layer = projection_layer
 #         self.dropout = nn.Dropout(dropout)
 
-#     def encode(self, xb, src_mask):
-#         embeds = self.dropout(self.src_embed(xb) + self.src_pos(xb))
-#         return self.encoder(embeds, src_mask)
+    def encode(self, xb, src_mask):
+        embeds = self.dropout(self.src_embed(xb) + self.src_pos(xb))
+        return self.encoder(embeds, src_mask)
     
     def decode(self, encoder_output, xb, src_mask, tgt_mask):
         embeds = self.dropout(self.tgt_embed(xb) + self.tgt_pos(xb))
