@@ -1,3 +1,15 @@
+# Reproduce loss: first 10 global steps
+# loss = 10.017609596252441                                                                                                                                                                                                                                                                                                                
+# loss = 9.848834991455078                                                                                                                                                                                                                                                                                                                 
+# loss = 9.793350219726562                                                                                                                                                                                                                                                                                                                 
+# loss = 9.768488883972168                                                                                                                                                                                                                                                                                                                 
+# loss = 9.680366516113281                                                                                                                                                                                                                                                                                                                 
+# loss = 9.612157821655273                                                                                                                                                                                                                                                                                                                 
+# loss = 9.63258171081543                                                                                                                                                                                                                                                                                                                  
+# loss = 9.568682670593262                                                                                                                                                                                                                                                                                                                 
+# loss = 9.421436309814453                                                                                                                                                                                                                                                                                                                 
+# loss = 9.477269172668457
+
 from typing import Sequence, Union
 import torch
 import torch.nn.functional as F
