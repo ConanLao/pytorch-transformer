@@ -295,17 +295,28 @@ class DecoderBlock(nn.Module):
         xb = self.residual_3(xb, self.ffwd)
         return xb
 
+# class Encoder(nn.Module):
+
+#     def __init__(self, layers: nn.ModuleList) -> None:
+#         super().__init__()
+#         self.layers = layers
+#         self.norm = LayerNormalization()
+
+#     def forward(self, x, mask):
+#         for layer in self.layers:
+#             x = layer(x, mask)
+#         return self.norm(x)
+
 class Encoder(nn.Module):
-
-    def __init__(self, layers: nn.ModuleList) -> None:
+    def __init__(self, encoder_blocks : Sequence[EncoderBlock]):
         super().__init__()
-        self.layers = layers
-        self.norm = LayerNormalization()
+        self.blocks = nn.ModuleList(encoder_blocks)
+        self.ln = LayerNormalization()
 
-    def forward(self, x, mask):
-        for layer in self.layers:
-            x = layer(x, mask)
-        return self.norm(x)
+    def forward(self, xb, mask):
+        for block in self.blocks:
+            xb = block(xb, mask)
+        return self.ln(xb)
     
 class Decoder(nn.Module):
 
