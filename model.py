@@ -400,15 +400,12 @@ class Transformer(nn.Module):
         self.dropout = nn.Dropout(dropout)
 
     def encode(self, xb, src_mask):
-        print(f'type = {type(self.src_embed)}')
-        self.src_embed(xb)
-        self.src_pos(xb)
         embeds = self.dropout(self.src_embed(xb) + self.src_pos(xb))
         return self.encoder(embeds, src_mask)
     
     def decode(self, encoder_output, xb, src_mask, tgt_mask):
         embeds = self.dropout(self.tgt_embed(xb) + self.tgt_pos(xb))
-        return self.decoder(embeds, encoder_output, src_mask, tgt_mask)
+        return self.decoder(encoder_output, embeds, src_mask, tgt_mask)
     
     def project(self, xb):
         return self.projection_layer(xb)
