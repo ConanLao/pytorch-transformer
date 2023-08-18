@@ -206,6 +206,7 @@ class MultiheadAttention(nn.Module):
             if mask is not None:
                 # -1e9 and -float('inf') gave the the same result
                 # logits.masked_fill_(mask == 0, -float('inf'))
+                # ERROR 2
                 # masked_fill_ is in place but masked_fill is not
                 logits.masked_fill_(mask == 0, -1e9)
             probs = F.softmax(logits, dim = -1)
@@ -236,18 +237,31 @@ class MultiheadAttention(nn.Module):
         return self.output(a)
 
 
+# class EncoderBlock(nn.Module):
+
+#     def __init__(self, self_attention_block: MultiheadAttention, feed_forward_block: FeedForward, dropout: float) -> None:
+#         super().__init__()
+#         self.self_attention_block = self_attention_block
+#         self.feed_forward_block = feed_forward_block
+#         self.residual_connections = nn.ModuleList([Residual(dropout) for _ in range(2)])
+
+#     def forward(self, x, src_mask):
+#         x = self.residual_connections[0](x, lambda x: self.self_attention_block(x, x, x, src_mask))
+#         x = self.residual_connections[1](x, self.feed_forward_block)
+#         return x
+
 class EncoderBlock(nn.Module):
-
-    def __init__(self, self_attention_block: MultiheadAttention, feed_forward_block: FeedForward, dropout: float) -> None:
+    def __init__(self, self_attention : MultiheadAttention, ffwd : FeedForward, dropout : float):
         super().__init__()
-        self.self_attention_block = self_attention_block
-        self.feed_forward_block = feed_forward_block
-        self.residual_connections = nn.ModuleList([Residual(dropout) for _ in range(2)])
+        self.self_attention = self_attention
+        self.ffwd = ffwd
+        self.residual_1 = Residual(dropout)
+        self.residual_2 = Residual(dropout)
 
-    def forward(self, x, src_mask):
-        x = self.residual_connections[0](x, lambda x: self.self_attention_block(x, x, x, src_mask))
-        x = self.residual_connections[1](x, self.feed_forward_block)
-        return x
+    def forward(self, xb, mask):
+        xb = self.residual_1(xb, lambda x : self.self_attention(x, x, x, mask))
+        xb = self.residual_2(xb, self.ffwd)
+        return xb
     
 class DecoderBlock(nn.Module):
 
