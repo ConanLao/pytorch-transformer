@@ -390,10 +390,10 @@ class ProjectionLayer(nn.Module):
 class Transformer(nn.Module):
     def __init__(self, src_embed: InputEmbedding, tgt_embed : InputEmbedding, src_pos: PositionEmbedding, tgt_pos: PositionEmbedding, encoder : Encoder, decoder : Decoder, projection_layer : ProjectionLayer, dropout=0.1):
         super().__init__()
-        self.src_embed = src_embed
-        self.tgt_embed = tgt_embed
         self.encoder = encoder
         self.decoder = decoder
+        self.src_embed = src_embed
+        self.tgt_embed = tgt_embed
         self.src_pos = src_pos
         self.tgt_pos = tgt_pos
         self.projection_layer = projection_layer
