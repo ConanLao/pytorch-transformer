@@ -360,55 +360,55 @@ class ProjectionLayer(nn.Module):
     def forward(self, x):
         return torch.log_softmax(self.ll(x), dim=-1)
     
-# class Transformer(nn.Module):
-
-#     def __init__(self, encoder: Encoder, decoder: Decoder, src_embed: InputEmbedding, tgt_embed: InputEmbedding, src_pos: PositionEmbedding, tgt_pos: PositionEmbedding, projection_layer: ProjectionLayer, dropout=0.1) -> None:
-#         super().__init__()
-#         self.encoder = encoder
-#         self.decoder = decoder
-#         self.src_embed = src_embed
-#         self.tgt_embed = tgt_embed
-#         self.src_pos = src_pos
-#         self.tgt_pos = tgt_pos
-#         self.projection_layer = projection_layer
-#         self.dropout = nn.Dropout(dropout)
-
-#     def encode(self, src, src_mask):
-#         # (batch, seq_len, d_model)
-#         src = self.dropout(self.src_embed(src) + self.src_pos(src))
-#         return self.encoder(src, src_mask)
-    
-#     def decode(self, encoder_output: torch.Tensor, tgt: torch.Tensor, src_mask: torch.Tensor, tgt_mask: torch.Tensor):
-#         # (batch, seq_len, d_model)
-#         tgt = self.dropout(self.tgt_embed(tgt) + self.tgt_pos(tgt))
-#         return self.decoder(tgt, encoder_output, src_mask, tgt_mask)
-    
-#     def project(self, x):
-#         # (batch, seq_len, vocab_size)
-#         return self.projection_layer(x)
-
 class Transformer(nn.Module):
-    def __init__(self, src_embed: InputEmbedding, tgt_embed : InputEmbedding, src_pos: PositionEmbedding, tgt_pos: PositionEmbedding, encoder : Encoder, decoder : Decoder, projection_layer : ProjectionLayer, dropout=0.1):
+
+    def __init__(self, src_embed: InputEmbedding, tgt_embed: InputEmbedding, src_pos: PositionEmbedding, tgt_pos: PositionEmbedding, encoder: Encoder, decoder: Decoder, projection_layer: ProjectionLayer, dropout=0.1) -> None:
         super().__init__()
-        self.src_embed = src_embed
-        self.tgt_embed = tgt_embed
         self.encoder = encoder
         self.decoder = decoder
+        self.src_embed = src_embed
+        self.tgt_embed = tgt_embed
         self.src_pos = src_pos
         self.tgt_pos = tgt_pos
         self.projection_layer = projection_layer
         self.dropout = nn.Dropout(dropout)
 
-    def encode(self, xb, src_mask):
-        embeds = self.dropout(self.src_embed(xb) + self.src_pos(xb))
-        return self.encoder(embeds, src_mask)
+    def encode(self, src, src_mask):
+        # (batch, seq_len, d_model)
+        src = self.dropout(self.src_embed(src) + self.src_pos(src))
+        return self.encoder(src, src_mask)
     
-    def decode(self, encoder_output, xb, src_mask, tgt_mask):
-        embeds = self.dropout(self.tgt_embed(xb) + self.tgt_pos(xb))
-        return self.decoder(encoder_output, embeds, src_mask, tgt_mask)
+    def decode(self, encoder_output: torch.Tensor, tgt: torch.Tensor, src_mask: torch.Tensor, tgt_mask: torch.Tensor):
+        # (batch, seq_len, d_model)
+        tgt = self.dropout(self.tgt_embed(tgt) + self.tgt_pos(tgt))
+        return self.decoder(tgt, encoder_output, src_mask, tgt_mask)
     
-    def project(self, xb):
-        return self.projection_layer(xb)
+    def project(self, x):
+        # (batch, seq_len, vocab_size)
+        return self.projection_layer(x)
+
+# class Transformer(nn.Module):
+#     def __init__(self, src_embed: InputEmbedding, tgt_embed : InputEmbedding, src_pos: PositionEmbedding, tgt_pos: PositionEmbedding, encoder : Encoder, decoder : Decoder, projection_layer : ProjectionLayer, dropout=0.1):
+#         super().__init__()
+#         self.src_embed = src_embed
+#         self.tgt_embed = tgt_embed
+#         self.encoder = encoder
+#         self.decoder = decoder
+#         self.src_pos = src_pos
+#         self.tgt_pos = tgt_pos
+#         self.projection_layer = projection_layer
+#         self.dropout = nn.Dropout(dropout)
+
+#     def encode(self, xb, src_mask):
+#         embeds = self.dropout(self.src_embed(xb) + self.src_pos(xb))
+#         return self.encoder(embeds, src_mask)
+    
+#     def decode(self, encoder_output, xb, src_mask, tgt_mask):
+#         embeds = self.dropout(self.tgt_embed(xb) + self.tgt_pos(xb))
+#         return self.decoder(encoder_output, embeds, src_mask, tgt_mask)
+    
+#     def project(self, xb):
+#         return self.projection_layer(xb)
     
 def build_transformer(src_vocab_size: int, tgt_vocab_size: int, src_seq_len: int, tgt_seq_len: int, d_model: int=512, N: int=6, h: int=8, dropout: float=0.1, d_ff: int=2048) -> Transformer:
     # Create the embedding layers
