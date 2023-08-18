@@ -263,20 +263,37 @@ class EncoderBlock(nn.Module):
         xb = self.residual_2(xb, self.ffwd)
         return xb
     
+# class DecoderBlock(nn.Module):
+
+#     def __init__(self, self_attention_block: MultiheadAttention, cross_attention_block: MultiheadAttention, feed_forward_block: FeedForward, dropout: float) -> None:
+#         super().__init__()
+#         self.self_attention_block = self_attention_block
+#         self.cross_attention_block = cross_attention_block
+#         self.feed_forward_block = feed_forward_block
+#         self.residual_connections = nn.ModuleList([Residual(dropout) for _ in range(3)])
+
+#     def forward(self, x, encoder_output, src_mask, tgt_mask):
+#         x = self.residual_connections[0](x, lambda x: self.self_attention_block(x, x, x, tgt_mask))
+#         x = self.residual_connections[1](x, lambda x: self.cross_attention_block(x, encoder_output, encoder_output, src_mask))
+#         x = self.residual_connections[2](x, self.feed_forward_block)
+#         return x
+
 class DecoderBlock(nn.Module):
-
-    def __init__(self, self_attention_block: MultiheadAttention, cross_attention_block: MultiheadAttention, feed_forward_block: FeedForward, dropout: float) -> None:
+    def __init__(self, self_attention : MultiheadAttention, cross_attention : MultiheadAttention, ffwd : FeedForward, dropout : float):
         super().__init__()
-        self.self_attention_block = self_attention_block
-        self.cross_attention_block = cross_attention_block
-        self.feed_forward_block = feed_forward_block
-        self.residual_connections = nn.ModuleList([Residual(dropout) for _ in range(3)])
+        self.self_attention = self_attention
+        self.cross_attention = cross_attention
+        self.ffwd = ffwd
+        self.residual_1 = Residual(dropout)
+        self.residual_2 = Residual(dropout)
+        self.residual_3 = Residual(dropout)
 
-    def forward(self, x, encoder_output, src_mask, tgt_mask):
-        x = self.residual_connections[0](x, lambda x: self.self_attention_block(x, x, x, tgt_mask))
-        x = self.residual_connections[1](x, lambda x: self.cross_attention_block(x, encoder_output, encoder_output, src_mask))
-        x = self.residual_connections[2](x, self.feed_forward_block)
-        return x
+    
+    def forward(self, xb, encoder_output, src_mask, tgt_mask):
+        xb = self.residual_1(xb, lambda x : self.self_attention(x, x, x, tgt_mask))
+        xb = self.residual_2(xb, lambda x : self.cross_attention(x, encoder_output, encoder_output, src_mask))
+        xb = self.residual_3(xb, self.ffwd)
+        return xb
 
 class Encoder(nn.Module):
 
