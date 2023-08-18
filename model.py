@@ -319,17 +319,28 @@ class Encoder(nn.Module):
             xb = block(xb, mask)
         return self.ln(xb)
     
+# class Decoder(nn.Module):
+
+#     def __init__(self, layers: nn.ModuleList) -> None:
+#         super().__init__()
+#         self.layers = layers
+#         self.norm = LayerNormalization()
+
+#     def forward(self, x, encoder_output, src_mask, tgt_mask):
+#         for layer in self.layers:
+#             x = layer(x, encoder_output, src_mask, tgt_mask)
+#         return self.norm(x)
+
 class Decoder(nn.Module):
-
-    def __init__(self, layers: nn.ModuleList) -> None:
+    def __init__(self, decoder_blocks : Sequence[DecoderBlock]):
         super().__init__()
-        self.layers = layers
-        self.norm = LayerNormalization()
-
-    def forward(self, x, encoder_output, src_mask, tgt_mask):
-        for layer in self.layers:
-            x = layer(x, encoder_output, src_mask, tgt_mask)
-        return self.norm(x)
+        self.blocks = nn.ModuleList(decoder_blocks)
+        self.ln = LayerNormalization()
+    
+    def forward(self, xb, encoder_output, src_mask, tgt_mask):
+        for block in self.blocks:
+            xb = block(xb, encoder_output, src_mask, tgt_mask)
+        return self.ln(xb)
 
 class ProjectionLayer(nn.Module):
 
@@ -401,7 +412,8 @@ def build_transformer(src_vocab_size: int, tgt_vocab_size: int, src_seq_len: int
     # Create the encoder and decoder
     # encoder = Encoder(nn.ModuleList(encoder_blocks))
     encoder = Encoder(encoder_blocks)
-    decoder = Decoder(nn.ModuleList(decoder_blocks))
+    # decoder = Decoder(nn.ModuleList(decoder_blocks))
+    decoder = Decoder(decoder_blocks)
     
     # Create the projection layer
     projection_layer = ProjectionLayer(d_model, tgt_vocab_size)
