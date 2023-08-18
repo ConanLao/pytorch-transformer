@@ -337,7 +337,7 @@ class Decoder(nn.Module):
         self.blocks = nn.ModuleList(decoder_blocks)
         self.ln = LayerNormalization()
     
-    def forward(self, encoder_output, xb, src_mask, tgt_mask):
+    def forward(self, xb, encoder_output, src_mask, tgt_mask):
         for block in self.blocks:
             xb = block(xb, encoder_output, src_mask, tgt_mask)
         return self.ln(xb)
@@ -405,7 +405,7 @@ class Transformer(nn.Module):
     
     def decode(self, encoder_output, xb, src_mask, tgt_mask):
         embeds = self.dropout(self.tgt_embed(xb) + self.tgt_pos(xb))
-        return self.decoder(encoder_output, embeds, src_mask, tgt_mask)
+        return self.decoder(embeds, encoder_output, src_mask, tgt_mask)
     
     def project(self, xb):
         return self.projection_layer(xb)
