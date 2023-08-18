@@ -94,10 +94,10 @@ class MultiheadAttention(nn.Module):
         self.d_model = d_model
         assert d_model % head_cnt == 0
         self.d_k = d_model // head_cnt
-        self.query = nn.Linear(d_model, d_model)
-        self.key = nn.Linear(d_model, d_model)
-        self.value = nn.Linear(d_model, d_model)
-        self.output = nn.Linear(d_model, d_model)
+        self.query = nn.Linear(d_model, d_model, bias=False)
+        self.key = nn.Linear(d_model, d_model, bias=False)
+        self.value = nn.Linear(d_model, d_model, bias=False)
+        self.output = nn.Linear(d_model, d_model, bias=False)
         self.dropout = nn.Dropout(dropout)
     
     def forward(self, q_src, k_src, v_src : torch.Tensor, mask : torch.Tensor):
