@@ -390,6 +390,9 @@ class ProjectionLayer(nn.Module):
 class Transformer(nn.Module):
     def __init__(self, src_embed: InputEmbedding, tgt_embed : InputEmbedding, src_pos: PositionEmbedding, tgt_pos: PositionEmbedding, encoder : Encoder, decoder : Decoder, projection_layer : ProjectionLayer, dropout=0.1):
         super().__init__()
+        # ERROR 3:
+        # The order of class members is the order of initiation,
+        # when we call nn.init.xavier_uniform_
         self.encoder = encoder
         self.decoder = decoder
         self.src_embed = src_embed
@@ -410,54 +413,96 @@ class Transformer(nn.Module):
     def project(self, xb):
         return self.projection_layer(xb)
     
-def build_transformer(src_vocab_size: int, tgt_vocab_size: int, src_seq_len: int, tgt_seq_len: int, d_model: int=512, N: int=6, h: int=8, dropout: float=0.1, d_ff: int=2048) -> Transformer:
-    # Create the embedding layers
+# def build_transformer(src_vocab_size: int, tgt_vocab_size: int, src_seq_len: int, tgt_seq_len: int, d_model: int=512, N: int=6, h: int=8, dropout: float=0.1, d_ff: int=2048) -> Transformer:
+#     # Create the embedding layers
+#     src_embed = InputEmbedding(src_vocab_size, d_model)
+#     tgt_embed = InputEmbedding(tgt_vocab_size, d_model)
+
+#     # Create the positional encoding layers
+#     src_pos = PositionEmbedding(src_seq_len, d_model)
+#     tgt_pos = PositionEmbedding(tgt_seq_len, d_model)
+    
+#     # Create the encoder blocks
+#     encoder_blocks = []
+#     for _ in range(N):
+#         encoder_self_attention_block = MultiheadAttention(d_model, h, dropout)
+#         # print(f'self_attention_block param cnt = {count_parameters(encoder_self_attention_block)}')
+#         feed_forward_block = FeedForward(d_model, d_ff, dropout)
+#         # print(f'ffwd param cnt = {count_parameters(feed_forward_block)}')
+#         encoder_block = EncoderBlock(encoder_self_attention_block, feed_forward_block, dropout)
+#         # print(f'encoder_block param cnt = {count_parameters(encoder_block)}')
+#         encoder_blocks.append(encoder_block)
+
+#     # Create the decoder blocks
+#     decoder_blocks = []
+#     for _ in range(N):
+#         decoder_self_attention_block = MultiheadAttention(d_model, h, dropout)
+#         decoder_cross_attention_block = MultiheadAttention(d_model, h, dropout)
+#         feed_forward_block = FeedForward(d_model, d_ff, dropout)
+#         decoder_block = DecoderBlock(decoder_self_attention_block, decoder_cross_attention_block, feed_forward_block, dropout)
+#         # print(f'decoder_block param cnt = {count_parameters(decoder_block)}')
+#         decoder_blocks.append(decoder_block)
+    
+#     # Create the encoder and decoder
+#     # encoder = Encoder(nn.ModuleList(encoder_blocks))
+#     encoder = Encoder(encoder_blocks)
+#     # decoder = Decoder(nn.ModuleList(decoder_blocks))
+#     decoder = Decoder(decoder_blocks)
+    
+#     # Create the projection layer
+#     projection_layer = ProjectionLayer(d_model, tgt_vocab_size)
+#     # print(f'projection_layer param cnt = {count_parameters(projection_layer)}')
+
+#     # Create the transformer
+#     transformer = Transformer(src_embed, tgt_embed, src_pos, tgt_pos, encoder, decoder, projection_layer, dropout=0.1) 
+#     # Initialize the parameters
+#     for p in transformer.parameters():
+#         if p.dim() > 1:
+#             nn.init.xavier_uniform_(p)
+#     # print(f'param cnt = {count_parameters(transformer)}')    
+#     return transformer
+
+
+def build_transformer(src_vocab_size : int, tgt_vocab_size : int, src_max_seq_len: int, tgt_max_seq_len: int, d_model: 512, n_layer : int = 6, n_head: int = 8, dropout : float = 0.1, d_ff = 2048) -> Transformer:
     src_embed = InputEmbedding(src_vocab_size, d_model)
     tgt_embed = InputEmbedding(tgt_vocab_size, d_model)
 
-    # Create the positional encoding layers
-    src_pos = PositionEmbedding(src_seq_len, d_model)
-    tgt_pos = PositionEmbedding(tgt_seq_len, d_model)
-    
-    # Create the encoder blocks
+    src_pos = PositionEmbedding(src_max_seq_len, d_model)
+    tgt_pos = PositionEmbedding(tgt_max_seq_len, d_model)
+
     encoder_blocks = []
-    for _ in range(N):
-        encoder_self_attention_block = MultiheadAttention(d_model, h, dropout)
-        # print(f'self_attention_block param cnt = {count_parameters(encoder_self_attention_block)}')
-        feed_forward_block = FeedForward(d_model, d_ff, dropout)
-        # print(f'ffwd param cnt = {count_parameters(feed_forward_block)}')
-        encoder_block = EncoderBlock(encoder_self_attention_block, feed_forward_block, dropout)
+    for _ in range(n_layer):
+        self_attention_block = MultiheadAttention(d_model, n_head, dropout)
+        # print(f'self_attention_block param cnt = {count_parameters(self_attention_block)}')
+        ffwd = FeedForward(d_model, d_ff, dropout)
+        # print(f'ffwd param cnt = {count_parameters(ffwd)}')
+        encoder_block = EncoderBlock(self_attention_block, ffwd, dropout)
         # print(f'encoder_block param cnt = {count_parameters(encoder_block)}')
         encoder_blocks.append(encoder_block)
 
-    # Create the decoder blocks
     decoder_blocks = []
-    for _ in range(N):
-        decoder_self_attention_block = MultiheadAttention(d_model, h, dropout)
-        decoder_cross_attention_block = MultiheadAttention(d_model, h, dropout)
-        feed_forward_block = FeedForward(d_model, d_ff, dropout)
-        decoder_block = DecoderBlock(decoder_self_attention_block, decoder_cross_attention_block, feed_forward_block, dropout)
+    for _ in range(n_layer):
+        self_attention_block = MultiheadAttention(d_model, n_head, dropout)
+        cross_attention_block = MultiheadAttention(d_model, n_head, dropout)
+        ffwd = FeedForward(d_model, d_ff, dropout)
+        decoder_block = DecoderBlock(self_attention_block, cross_attention_block, ffwd, dropout)
         # print(f'decoder_block param cnt = {count_parameters(decoder_block)}')
         decoder_blocks.append(decoder_block)
     
-    # Create the encoder and decoder
-    # encoder = Encoder(nn.ModuleList(encoder_blocks))
     encoder = Encoder(encoder_blocks)
-    # decoder = Decoder(nn.ModuleList(decoder_blocks))
     decoder = Decoder(decoder_blocks)
-    
-    # Create the projection layer
+
     projection_layer = ProjectionLayer(d_model, tgt_vocab_size)
     # print(f'projection_layer param cnt = {count_parameters(projection_layer)}')
 
-    # Create the transformer
-    transformer = Transformer(src_embed, tgt_embed, src_pos, tgt_pos, encoder, decoder, projection_layer, dropout=0.1) 
-    # Initialize the parameters
+    transformer = Transformer(src_embed, tgt_embed, src_pos, tgt_pos, encoder, decoder, projection_layer, dropout=0.1)
+
     for p in transformer.parameters():
         if p.dim() > 1:
             nn.init.xavier_uniform_(p)
-    # print(f'param cnt = {count_parameters(transformer)}')    
-    return transformer
 
+    
+    # print(f'param cnt = {count_parameters(transformer)}')
+    return transformer
 # def count_parameters(model):
 #   return sum(p.numel() for p in model.parameters())
