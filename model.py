@@ -342,15 +342,23 @@ class Decoder(nn.Module):
             xb = block(xb, encoder_output, src_mask, tgt_mask)
         return self.ln(xb)
 
+# class ProjectionLayer(nn.Module):
+
+#     def __init__(self, d_model, vocab_size) -> None:
+#         super().__init__()
+#         self.proj = nn.Linear(d_model, vocab_size)
+
+#     def forward(self, x) -> None:
+#         # (batch, seq_len, d_model) --> (batch, seq_len, vocab_size)
+#         return torch.log_softmax(self.proj(x), dim = -1)
+
 class ProjectionLayer(nn.Module):
-
-    def __init__(self, d_model, vocab_size) -> None:
+    def __init__(self, d_model : int, vocab_size : int):
         super().__init__()
-        self.proj = nn.Linear(d_model, vocab_size)
+        self.ll = nn.Linear(d_model, vocab_size)
 
-    def forward(self, x) -> None:
-        # (batch, seq_len, d_model) --> (batch, seq_len, vocab_size)
-        return torch.log_softmax(self.proj(x), dim = -1)
+    def forward(self, x):
+        return torch.log_softmax(self.ll(x), dim=-1)
     
 class Transformer(nn.Module):
 
